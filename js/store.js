@@ -61,10 +61,20 @@ const remote = {
   },
   async signOut() { await sb.auth.signOut(); },
   async list() {
-    const { data, error } = await sb.from("recommendations")
-      .select("*, profiles(username), likes(user_id)").order("created_at", { ascending: false }).limit(100);
-    if (error) throw error;
-    return data.map(r => ({ ...r, username: r.profiles?.username || "anónimo", likes: r.likes.map(l => l.user_id) }));
+    const [recs, profs, likes] = await Promise.all([
+      sb.from("recommendations").select("*").order("created_at", { ascending: false }).limit(100),
+      sb.from("profiles").select("id,username"),
+      sb.from("likes").select("rec_id,user_id"),
+    ]);
+    for (const r of [recs, profs, likes]) {
+      if (r.error) { console.error("Error Supabase:", r.error); throw new Error(r.error.message); }
+    }
+    const names = Object.fromEntries(profs.data.map(p => [p.id, p.username]));
+    return recs.data.map(r => ({
+      ...r,
+      username: names[r.user_id] || "anónimo",
+      likes: likes.data.filter(l => l.rec_id === r.id).map(l => l.user_id),
+    }));
   },
   async create(rec) {
     const u = await this.user();
