@@ -10,7 +10,7 @@ const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 
 function toast(msg) {
   const t = $("#toast"); t.textContent = msg; t.hidden = false;
-  clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 2600);
+  clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 9000);
 }
 
 function render() {
@@ -46,7 +46,7 @@ function card(r) {
 }
 
 async function load() {
-  try { state.recs = await store.list(); } catch (e) { toast("No se pudo cargar: " + e.message); }
+  try { state.recs = await store.list(); } catch (e) { console.error(e); toast("No se pudo cargar: " + e.message); }
   render();
 }
 
